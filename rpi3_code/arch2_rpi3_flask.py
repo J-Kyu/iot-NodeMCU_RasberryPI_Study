@@ -11,8 +11,11 @@ mqtt = Mqtt(app)
 pub_topic = 'iot/2'
 sub_topic_dht22 = 'iot/2/dht22'
 sub_topic_cds = 'iot/2/cds'
+sub_topic_dht22_t = 'iot/2/dht22_t'
+sub_topic_dht22_h = 'iot/2/dht22_h'
 # global variable for message payload
 mqtt_message=''
+warningMessage = 'Not Intended Page...please check your url again~!'
 print('@@ Use URL: /iot/2/{led,dht22}')
 
 
@@ -20,6 +23,9 @@ print('@@ Use URL: /iot/2/{led,dht22}')
 
 @app.route('/')
 def index():
+    return render_template('index_lab7.html', result='Hi J-Kyu')
+@app.route('/iot/2')
+def index2():
     return render_template('index_lab7.html', result='Hi J-Kyu')
 
 
@@ -37,6 +43,14 @@ def get_command(cmd):
         mqtt.publish(pub_topic, 'cds')
         time.sleep(2)
         return render_template('index_lab7.html', result=mqtt_message)
+    elif cmd == 'dht22_t':
+        mqtt.publish(pub_topic, 'dht22_t')
+        time.sleep(2)
+        return render_template('index_lab7.html', result=mqtt_message)
+    elif cmd == 'dht22_h':
+        mqtt.publish(pub_topic, 'dht22_h')
+        time.sleep(2)
+        return render_template('index_lab7.html', result=mqtt_message)
     elif cmd == 'ledon':
         mqtt.publish(pub_topic, 'LED/ON')
         return render_template('index_lab7.html', result='LED ON')
@@ -52,12 +66,16 @@ def get_command(cmd):
     elif cmd == 'usbled':
         mqtt.publish(pub_topic, 'USBLED')
         return render_template('index_lab7.html', result='USB LED Toggle')
+    else:
+        return render_template('index_lab7.html', result=warningMessage)
 ################### Function defition #################
 # When mqtt is connected, subscribe to following topics
 @mqtt.on_connect()
 def handle_connect(client, userdata, flags, rc):
     mqtt.subscribe(sub_topic_dht22)
     mqtt.subscribe(sub_topic_cds)
+    mqtt.subscribe(sub_topic_dht22_t)
+    mqtt.subscribe(sub_topic_dht22_h)
 # When mqtt receives message from subscribed topic
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
@@ -69,8 +87,11 @@ def handle_mqtt_message(client, userdata, message):
     mqtt_message = payload
     print ("Topic: " , payload)
 
+@app.errorhandler(404)
+def page_not_found(error):
+    print(error)
+    return render_template('index_lab7.html', result=warningMessage)
 
 
 if __name__=='__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
-
