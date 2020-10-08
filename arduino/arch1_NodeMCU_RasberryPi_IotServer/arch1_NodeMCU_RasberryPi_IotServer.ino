@@ -1,5 +1,5 @@
 #include <ESP8266WiFi.h>
-#include <PubSubClient.h>
+#include <EspMQTTClient.h>
 
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -28,7 +28,6 @@
 #define DHTTYPE DHTesp::DHT22 // case of dht11 module
 
 
-int led_state, usbled_state;
 // Wifi
 const char *wifi_ssid = "J-Kyu"; // 사용하는 공유기 이름
 const char *wifi_password = "password"; // 공유기 password 입력
@@ -39,9 +38,13 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 //Global Variable
 unsigned long previousHTTime = 0;
-
-
-
+int preEnvState = 1;
+int led_state= 0;
+int relayState = 0;
+unsigned long relayOnTime = 0;
+unsigned long currentTime = 0;
+int timeFlag = 0;
+int light_val = 0;
 
 
 // MQTT
@@ -51,100 +54,127 @@ unsigned long previousHTTime = 0;
 #define TOPIC_GREETINGS "Hello from nodeMCU at 2"
 String mqtt_payload;
 
+
+
+//MQTT Client
+
+EspMQTTClient client(
+  wifi_ssid,
+  wifi_password,
+  mqtt_broker,  // MQTT Broker server ip
+  mqtt_user,   // Can be omitted if not needed
+  mqtt_pwd,   // Can be omitted if not needed
+  "kit_2"      // Client name that uniquely identify your device
+);
+
+
+
+
 //Publish를 위한 Topic
-const char *mqtt_nodeName = "nodeMCU.2"; // nth405를 자신의 학번으로 변경
-const char *pub_dht = "iot/2/dht22"; // nth405를 자신의 학번으로 변경
-const char *pub_cds = "iot/2/cds"; // nth405를 자신의 학번으로 변경
+const char *mqtt_nodeName = "nodeMCU.2";
 //Subscribe Topic
-const char *sub_topic = "iot/2"; // nth405를 자신의 학번으로 변경
-WiFiClient wifiClient; // WIFI client
+const char *sub_topic = "iot/2";
 
 DHTesp dht; // 온습도 센서 instance 선언
 
 float temperature, humidity;
 int lightValue;
 char pub_data[80]; //publishing 할때 사용
-void callback(char* topic, byte* payload, unsigned int length);
+void callback(const String& payload);
 
-PubSubClient mqttc(mqtt_broker, 1883, callback, wifiClient); // MQTT client
 
-void callback(char *topic, byte *payload, unsigned int length) {//Web으로 부터 수신한 Message에 따른동작 제어 함수
+void callback(const String& payload) {
   
-  char message_buff[100]; //initialise storage buffer
-  String msgString;
-  int i = 0;
-  Serial.println("Message arrived: topic: " + String(topic));
-  Serial.println("Length: "+ String(length,DEC));
+//  client.subscribe("iot/2",[](const String & payload) {
+      unsigned int length = payload.length();
+      
+      char message_buff[100]; //initialise storage buffer
+      String msgString;
+      int i = 0;
+      Serial.println("Message arrived: topic: " + String("iot/2"));
+      Serial.println("Length: "+ String(length,DEC));
+      
+      //create character buffer with ending null terminator (string)
+      for(i=0; i<length; i++){
+        message_buff[i] = payload[i];
+      }
+      
+      message_buff[i]= '\0';
+      msgString = String(message_buff );
+      Serial.println("Payload: "+ msgString);
+    
+    
+        //전송된 메시가 "led"이면 LED를 받을 때마다 켜고 끈다.(토글)
+      if (msgString == "led") {
+        digitalWrite(LED_PIN, !led_state);
+        led_state = !led_state;
+        Serial.println("Switching LED");
+      }
+      else if (msgString == "LED/ON") {
+        digitalWrite(LED_PIN, LED_ON);
+        Serial.println("LED ON");
+      } 
+      else if (msgString == "LED/OFF") {
+        digitalWrite(LED_PIN, LED_OFF);
+        Serial.println("LED OFF");
+      } 
+      else if (msgString == "dht22") {
+        humidity = dht.getHumidity();
+        temperature = dht.getTemperature();
+        mqtt_payload = String("Temperature is ") + String(temperature) + String(", and Humidity is ") +
+        String(humidity);
+        client.publish("iot/2/dht22", mqtt_payload.c_str());
+        Serial.println("Message sent : " + mqtt_payload);
+      } 
+      else if (msgString == "dht22_t") {
+        temperature = dht.getTemperature();
+        mqtt_payload = String("Temperature is ") + String(temperature);
+        client.publish("iot/2/dht22_t", mqtt_payload.c_str());
+        Serial.println("Message sent : " + mqtt_payload);
+      } 
+      else if (msgString == "dht22_h") {
+        humidity = dht.getHumidity();
+        mqtt_payload = String("Humidity is ") + String(humidity);
+        client.publish("iot/2/dht22_h", mqtt_payload.c_str());
+        Serial.println("Message sent : " + mqtt_payload);
+      } 
+      else if (msgString == "cds") {
+        lightValue = analogRead(CDS_PIN);
+        String payload = String("Light intensity is ") + String(lightValue);
+        client.publish("iot/2/cds", payload.c_str());
+        Serial.println("Message sent : " + payload);
+      }
+      else if(msgString == "USBLED/ON"){
+          digitalWrite(RELAY1_PIN, RELAY_ON);
+          relayState = RELAY_ON; 
+          timeFlag = 0;
+      }
+      else if(msgString == "USBLED/OFF"){
+          digitalWrite(RELAY1_PIN, RELAY_OFF);
+          relayState = RELAY_OFF; 
+          timeFlag = 0;
+      }
+      else if(msgString == "USBLED"){
+          digitalWrite(RELAY1_PIN, !relayState);
+          relayState = !relayState; 
+          timeFlag = 0;
+      }
+     
+//    });
   
-  //create character buffer with ending null terminator (string)
-  for(i=0; i<length; i++){
-    message_buff[i] = payload[i];
-  }
-  
-  message_buff[i]= '\0';
-  msgString = String(message_buff );
-  Serial.println("Payload: "+ msgString);
-  led_state = digitalRead(LED_PIN);
-  usbled_state = digitalRead(RELAY1_PIN);
 
 
-    //전송된 메시가 "led"이면 LED를 받을 때마다 켜고 끈다.(토글)
-  if (msgString == "led") {
-    digitalWrite(LED_PIN, !led_state);
-    Serial.println("Switching LED");
-  }
-  else if (msgString == "LED/ON") {
-    digitalWrite(LED_PIN, LED_ON);
-    Serial.println("LED ON");
-  } 
-  else if (msgString == "LED/OFF") {
-    digitalWrite(LED_PIN, LED_OFF);
-    Serial.println("LED OFF");
-  } 
-  else if (msgString == "dht22") {
-    humidity = dht.getHumidity();
-    temperature = dht.getTemperature();
-    mqtt_payload = String("Temperature is ") + String(temperature) + String(", and Humidity is ") +
-    String(humidity);
-    mqttc.publish("iot/2/dht22", mqtt_payload.c_str());
-    Serial.println("Message sent : " + mqtt_payload);
-  } 
-  else if (msgString == "dht22_t") {
-    temperature = dht.getTemperature();
-    mqtt_payload = String("Temperature is ") + String(temperature);
-    mqttc.publish("iot/2/dht22_t", mqtt_payload.c_str());
-    Serial.println("Message sent : " + mqtt_payload);
-  } 
-  else if (msgString == "dht22_h") {
-    humidity = dht.getHumidity();
-    mqtt_payload = String("Humidity is ") + String(humidity);
-    mqttc.publish("iot/2/dht22_h", mqtt_payload.c_str());
-    Serial.println("Message sent : " + mqtt_payload);
-  } 
-  else if (msgString == "cds") {
-    lightValue = analogRead(CDS_PIN);
-    String payload = String("Light intensity is ") + String(lightValue);
-    mqttc.publish("iot/2/cds", payload.c_str());
-    Serial.println("Message sent : " + payload);
-  }
-  else if(msgString == "USBLED/ON"){
-      digitalWrite(RELAY1_PIN, RELAY_ON);
-      usbled_state = RELAY_ON; 
-  }
-  else if(msgString == "USBLED/OFF"){
-      digitalWrite(RELAY1_PIN, RELAY_OFF);
-      usbled_state = RELAY_OFF; 
-  }
-  else if(msgString == "USBLED"){
-      digitalWrite(RELAY1_PIN, !usbled_state);
-      usbled_state = !usbled_state; 
-  }
+  
 } /* end of callback() for MQTT */
 
 
 void setup() {
   Serial.begin(9600);
-  delay(10);
+
+  //MQTT Callback
+//  client.setOnConnectionEstablishedCallback(callback);
+
+
   //DHT22
   dht.setup(DHT_PIN,DHTTYPE);
   
@@ -159,10 +189,8 @@ void setup() {
   //CDS
   pinMode(CDS_PIN,INPUT);
 
-  //WiFi
-  InitWiFi();
 
-  //OLDE
+  //OLED
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
@@ -170,24 +198,30 @@ void setup() {
   
   display.clearDisplay();
   display.setTextColor(WHITE);
-  
-  //Connection to MQTT broker
-  if (mqttc.connect(mqtt_nodeName, mqtt_user, mqtt_pwd)){
-    mqttc.publish(pub_dht, TOPIC_GREETINGS); // testing message of publish
-    mqttc.subscribe(sub_topic);//Subscribe 할 Topic
+
+  if( analogRead(CDS_PIN) < 300){
+       preEnvState = 0;
   }
   else{
-    Serial.println("MQTT connection failed.....\n");
+       preEnvState = 1;
   }
+
+  led_state = digitalRead(LED_PIN);
+  relayState = digitalRead(RELAY1_PIN);
+
   
+
+    
 }
 
 
 
 void loop() {
 
-   
-  unsigned long currentTime = millis();  
+  currentTime = millis(); 
+  light_val = analogRead(CDS_PIN); 
+  Serial.print(light_val);
+  Serial.print("\n");
 
   
   if(currentTime-previousHTTime >= 1000){
@@ -196,56 +230,41 @@ void loop() {
       
       float humidity = dht.getHumidity();
       float temperature = dht.getTemperature();
-      DisplayTH(humidity,temperature);
+      DisplayTH(temperature,humidity);
   }
 
-  
-  if(!wifiClient.connected()){
-    reconnect();
+  if(timeFlag == 0 && preEnvState == 1 && light_val < 300 && currentTime - relayOnTime > 10000){
+    //turn on
+    relayState = RELAY_ON;
+    relayOnTime = millis();
+    timeFlag = 1;
+
+  }
+  else if(timeFlag == 1 && currentTime - relayOnTime < 10000){
+    relayState = RELAY_ON;
+  }
+  else if(timeFlag == 1 && relayState == RELAY_ON && currentTime - relayOnTime > 10000){
+    relayState = RELAY_OFF;
+    timeFlag = 0;
   }
 
+  digitalWrite(RELAY1_PIN, relayState); // 릴레이 상태값 출력하기
   
+
   
-  mqttc.loop();
+
+   
+  if(light_val < 300){
+       preEnvState = 0;
+  }
+  else{
+      preEnvState = 1;
+  }
+
+
+  client.loop();
+  
 } /* end of loop() */
-
-
-void InitWiFi(){
-  Serial.println();
-  Serial.println("Connectiong to WiFi..");
-  // attempt to connect to WiFi network
-  WiFi.begin(wifi_ssid, wifi_password);
-  while (WiFi.status() != WL_CONNECTED){
-  delay(500);
-  Serial.print(".");
-  }
-  // 접속이 되면 출력
-  Serial.println();
-  Serial.print("Connected to AP: ");
-  //접속 정보를 출력
-  Serial.println(WiFi.localIP());
-}
-
-
-void reconnect(){
-  int status;
-  //네트워크 접속
-  while (!wifiClient.connected()){
-    status = WiFi.status();
-    if( status != WL_CONNECTED) {
-      WiFi.begin(wifi_ssid, wifi_password);
-      while(WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.println(".");
-      }
-      Serial.println("Connected to AP again");
-    }
-    delay(5000);
-  }//end while
-}//Network 접속 확인 함수
-
-
-
 
 
 
@@ -286,4 +305,14 @@ void DisplayTH(float t,float h){
   display.display(); 
 
   
+}
+
+
+
+void onConnectionEstablished() {
+
+  client.subscribe(sub_topic, callback);
+
+  client.publish(sub_topic,"Connection has established with nodeMCU_Kit Number 2");
+  Serial.println("Connection has established with nodeMCU_Kit Number 2");
 }
