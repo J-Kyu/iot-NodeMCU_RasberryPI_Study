@@ -43,7 +43,7 @@ int led_state= 0;
 int relayState = 0;
 unsigned long relayOnTime = 0;
 unsigned long currentTime = 0;
-int timeFlag = 0;
+int controlFlag = 0;
 int light_val = 0;
 
 
@@ -146,18 +146,15 @@ void callback(const String& payload) {
       }
       else if(msgString == "USBLED/ON"){
           digitalWrite(RELAY1_PIN, RELAY_ON);
-          relayState = RELAY_ON; 
-          timeFlag = 0;
+          controlFlag = 1;
       }
       else if(msgString == "USBLED/OFF"){
           digitalWrite(RELAY1_PIN, RELAY_OFF);
-          relayState = RELAY_OFF; 
-          timeFlag = 0;
+          controlFlag = 2;
       }
       else if(msgString == "USBLED"){
           digitalWrite(RELAY1_PIN, !relayState);
-          relayState = !relayState; 
-          timeFlag = 0;
+          controlFlag = relayState == 1 ? 1 : 2;
       }
      
 //    });
@@ -218,34 +215,41 @@ void setup() {
 
 void loop() {
 
+   client.loop();
+
+   delay(100);
+
+    
   currentTime = millis(); 
   light_val = analogRead(CDS_PIN); 
-  Serial.print(light_val);
-  Serial.print("\n");
 
   
-  if(currentTime-previousHTTime >= 1000){
+  if(currentTime-previousHTTime >= 10000){
       
       previousHTTime = millis();
-      
+      //display
       float humidity = dht.getHumidity();
       float temperature = dht.getTemperature();
       DisplayTH(temperature,humidity);
+
+      //publishing temperature & Humidiy & Light Intensity
+      String payload = String("Light intensity: ") + String(lightValue)+String("\t Temperature: ")+String(temperature)+String("\tHumidity: ")+String(humidity);;
+      client.publish("iot/2/message", payload.c_str());
   }
 
-  if(timeFlag == 0 && preEnvState == 1 && light_val < 300 && currentTime - relayOnTime > 10000){
+  if( controlFlag == 1 || preEnvState == 1 && light_val < 300 && currentTime - relayOnTime > 10000){
     //turn on
     relayState = RELAY_ON;
     relayOnTime = millis();
-    timeFlag = 1;
-
+    controlFlag = 0;
   }
-  else if(timeFlag == 1 && currentTime - relayOnTime < 10000){
+  else if( controlFlag == 0 && currentTime - relayOnTime < 10000){
     relayState = RELAY_ON;
   }
-  else if(timeFlag == 1 && relayState == RELAY_ON && currentTime - relayOnTime > 10000){
+  else if(controlFlag == 2 || relayState == RELAY_ON && currentTime - relayOnTime > 10000){
     relayState = RELAY_OFF;
-    timeFlag = 0;
+    relayOnTime = currentTime - 10001; // always make this valid:  currentTime - relayOnTime > 10000
+    controlFlag = 0;
   }
 
   digitalWrite(RELAY1_PIN, relayState); // 릴레이 상태값 출력하기
@@ -260,9 +264,6 @@ void loop() {
   else{
       preEnvState = 1;
   }
-
-
-  client.loop();
   
 } /* end of loop() */
 
