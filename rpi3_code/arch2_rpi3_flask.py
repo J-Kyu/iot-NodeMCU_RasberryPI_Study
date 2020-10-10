@@ -1,7 +1,12 @@
+import eventlet
 from flask import Flask, render_template
 from flask_mqtt import Mqtt
+from flask_socketio import SocketIO
 import time # library for time delay
 import paho.mqtt.client as mqtt
+
+eventlet.monkey_patch()
+
 app = Flask(__name__)
 app.config['MQTT_BROKER_URL'] = '203.252.106.154'
 app.config['MQTT_BROKER_PORT'] = 1883
@@ -13,6 +18,12 @@ sub_topic_dht22 = 'iot/2/dht22'
 sub_topic_cds = 'iot/2/cds'
 sub_topic_dht22_t = 'iot/2/dht22_t'
 sub_topic_dht22_h = 'iot/2/dht22_h'
+sub_topic_message = 'iot/2/message'
+
+mqtt = Mqtt(app)
+socketio = SocketIO(app)
+
+
 # global variable for message payload
 mqtt_message=''
 warningMessage = 'Not Intended Page...please check your url again~!'
@@ -29,45 +40,7 @@ def index2():
     return render_template('index_lab7.html', result='Hi J-Kyu')
 
 
-@app.route('/iot/2/<cmd>')
-def get_command(cmd):
-    global mqtt_message
-    if cmd == 'led':
-        mqtt.publish(pub_topic, 'led')
-        return render_template('index_lab7.html', result='LED Toggle')
-    elif cmd == 'dht22':
-        mqtt.publish(pub_topic, 'dht22')
-        time.sleep(2)
-        return render_template('index_lab7.html', result=mqtt_message)
-    elif cmd == 'cds':
-        mqtt.publish(pub_topic, 'cds')
-        time.sleep(2)
-        return render_template('index_lab7.html', result=mqtt_message)
-    elif cmd == 'dht22_t':
-        mqtt.publish(pub_topic, 'dht22_t')
-        time.sleep(2)
-        return render_template('index_lab7.html', result=mqtt_message)
-    elif cmd == 'dht22_h':
-        mqtt.publish(pub_topic, 'dht22_h')
-        time.sleep(2)
-        return render_template('index_lab7.html', result=mqtt_message)
-    elif cmd == 'ledon':
-        mqtt.publish(pub_topic, 'LED/ON')
-        return render_template('index_lab7.html', result='LED ON')
-    elif cmd == 'ledoff':
-        mqtt.publish(pub_topic, 'LED/OFF')
-        return render_template('index_lab7.html', result='LED OFF')
-    elif cmd == 'usbledon':
-        mqtt.publish(pub_topic, 'USBLED/ON')
-        return render_template('index_lab7.html', result='USB LED ON')
-    elif cmd == 'usbledoff':
-        mqtt.publish(pub_topic, 'USBLED/OFF')
-        return render_template('index_lab7.html', result='USB LED OFF')
-    elif cmd == 'usbled':
-        mqtt.publish(pub_topic, 'USBLED')
-        return render_template('index_lab7.html', result='USB LED Toggle')
-    else:
-        return render_template('index_lab7.html', result=warningMessage)
+
 ################### Function defition #################
 # When mqtt is connected, subscribe to following topics
 @mqtt.on_connect()
@@ -76,16 +49,20 @@ def handle_connect(client, userdata, flags, rc):
     mqtt.subscribe(sub_topic_cds)
     mqtt.subscribe(sub_topic_dht22_t)
     mqtt.subscribe(sub_topic_dht22_h)
+    mqtt.subscribe(sub_topic_message)
 # When mqtt receives message from subscribed topic
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
     global mqtt_message
+    data = dict(
+        topic=message.topic,
+        payload=message.payload.decode()
+    )
+    print("-----------",data)
+    socketio.emit('mqtt_message', data)
 
-    topic = message.topic
-    payload = message.payload.decode('utf-8')
+    
 
-    mqtt_message = payload
-    print ("Topic: " , payload)
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -93,5 +70,18 @@ def page_not_found(error):
     return render_template('index_lab7.html', result=warningMessage)
 
 
+########################SockeIO#############################
+
+@socketio.on('message')
+def handle_message(message):
+    print('received message: ' + message)
+
+@socketio.on("request") 
+def request(message): 
+    print(message)
+    mqtt.publish(pub_topic, message)
+
+
 if __name__=='__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    socketio.run(app, host='0.0.0.0', port=5000, use_reloader=False, debug=True)
+    #app.run(host='0.0.0.0', port=5000, debug=False)
