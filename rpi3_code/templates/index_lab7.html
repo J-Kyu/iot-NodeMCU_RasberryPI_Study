@@ -1,5 +1,10 @@
 <!DOCTYPE HTML>
 <html>
+
+</script>
+
+
+
 <head>
 <title>NodeMCU Control</title>
 </head>
@@ -19,6 +24,35 @@
 <a href="/iot/2/dht22"><button>Get temperature and humidity</button></a></br>
 
 <p> Result: {{result}}</p>
+
+<div id="subscribe_messages">
+    <p id="result">wow</p>
+</div>
+
+
+<div id="subscribe_messages"></div>
 </div>
 </body>
+
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+  $(document).ready(function() {
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    // listen for mqtt_message events
+    // when a new message is received, log and append the data to the page
+    socket.on('mqtt_message', function(data) {
+      console.log(data);
+      var result = data['topic']+": "+data['payload'];
+      $('#result').text(result)
+    })
+  });
+</script>
+
+
+
 </html>
+
+
