@@ -40,48 +40,7 @@ def index2():
     return render_template('index_lab7.html', result='Hi J-Kyu')
 
 
-@app.route('/iot/2/<cmd>')
-def get_command(cmd):
-    global mqtt_message
-    if cmd == 'led':
-        mqtt.publish(pub_topic, 'led')
-        return render_template('index_lab7.html', result='LED Toggle')
-    elif cmd == 'dht22':
-        mqtt.publish(pub_topic, 'dht22')
-        # time.sleep(2)
-        # return render_template('index_lab7.html', result=mqtt_message)
-    elif cmd == 'cds':
-        mqtt.publish(pub_topic, 'cds')
-        # time.sleep(2)
-        # return render_template('index_lab7.html', result=mqtt_message)
-    elif cmd == 'dht22_t':
-        mqtt.publish(pub_topic, 'dht22_t')
-        # time.sleep(2)
-        # return render_template('index_lab7.html', result=mqtt_message)
-    elif cmd == 'dht22_h':
-        mqtt.publish(pub_topic, 'dht22_h')
-        # time.sleep(2)
-        # return render_template('index_lab7.html', result=mqtt_message)
-    elif cmd == 'ledon':
-        mqtt.publish(pub_topic, 'LED/ON')
-        return render_template('index_lab7.html', result='LED ON')
-    elif cmd == 'ledoff':
-        mqtt.publish(pub_topic, 'LED/OFF')
-        return render_template('index_lab7.html', result='LED OFF')
-    elif cmd == 'usbledon':
-        mqtt.publish(pub_topic, 'USBLED/ON')
-        return render_template('index_lab7.html', result='USB LED ON')
-    elif cmd == 'usbledoff':
-        mqtt.publish(pub_topic, 'USBLED/OFF')
-        return render_template('index_lab7.html', result='USB LED OFF')
-    elif cmd == 'usbled':
-        mqtt.publish(pub_topic, 'USBLED')
-        return render_template('index_lab7.html', result='USB LED Toggle')
-    else:
-        return render_template('index_lab7.html', result=warningMessage)
 
-
-    return  render_template('index_lab7.html', result="")
 ################### Function defition #################
 # When mqtt is connected, subscribe to following topics
 @mqtt.on_connect()
@@ -99,8 +58,8 @@ def handle_mqtt_message(client, userdata, message):
         topic=message.topic,
         payload=message.payload.decode()
     )
-
-    socketio.emit('mqtt_message', data=data)
+    print("-----------",data)
+    socketio.emit('mqtt_message', data)
 
     
 
@@ -117,6 +76,10 @@ def page_not_found(error):
 def handle_message(message):
     print('received message: ' + message)
 
+@socketio.on("request") 
+def request(message): 
+    print(message)
+    mqtt.publish(pub_topic, message)
 
 
 if __name__=='__main__':
