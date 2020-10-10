@@ -11,9 +11,8 @@
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#define D0 16 // LED
-#define D1 5 // Relay
-#define D2 4 // DHT22
+
+
 
 #define LED_PIN 16 //D0
 #define RELAY1_PIN 2 //D1
@@ -27,14 +26,9 @@
 #define RELAY_OFF HIGH
 #define DHTTYPE DHTesp::DHT22 // case of dht11 module
 
-
-// Wifi
-const char *wifi_ssid = "J-Kyu"; // 사용하는 공유기 이름
-const char *wifi_password = "password"; // 공유기 password 입력
-
-//Screen
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
-
+//declare
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);//Screen
+DHTesp dht; // 온습도 센서 instance 선언 
 
 //Global Variable
 unsigned long previousHTTime = 0;
@@ -45,6 +39,12 @@ unsigned long relayOnTime = 0;
 unsigned long currentTime = 0;
 int controlFlag = 0;
 int light_val = 0;
+
+
+// Wifi
+const char *wifi_ssid = "J-Kyu"; // 사용하는 공유기 이름
+const char *wifi_password = "password"; // 공유기 password 입력
+
 
 
 // MQTT
@@ -74,8 +74,6 @@ EspMQTTClient client(
 const char *mqtt_nodeName = "nodeMCU.2";
 //Subscribe Topic
 const char *sub_topic = "iot/2";
-
-DHTesp dht; // 온습도 센서 instance 선언
 
 float temperature, humidity;
 int lightValue;
@@ -156,21 +154,12 @@ void callback(const String& payload) {
           digitalWrite(RELAY1_PIN, !relayState);
           controlFlag = relayState == 1 ? 1 : 2;
       }
-     
-//    });
   
-
-
-  
-} /* end of callback() for MQTT */
+} 
 
 
 void setup() {
   Serial.begin(9600);
-
-  //MQTT Callback
-//  client.setOnConnectionEstablishedCallback(callback);
-
 
   //DHT22
   dht.setup(DHT_PIN,DHTTYPE);
@@ -205,9 +194,6 @@ void setup() {
 
   led_state = digitalRead(LED_PIN);
   relayState = digitalRead(RELAY1_PIN);
-
-  
-
     
 }
 
