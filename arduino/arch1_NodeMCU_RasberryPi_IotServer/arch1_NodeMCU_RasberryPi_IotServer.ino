@@ -219,7 +219,7 @@ void loop() {
       DisplayTH(temperature,humidity);
 
       //publishing temperature & Humidiy & Light Intensity
-      String payload = String("Light intensity: ") + String(lightValue)+String("\t Temperature: ")+String(temperature)+String("\tHumidity: ")+String(humidity);;
+      String payload = String("Light intensity: ") + String(light_val)+String("\t Temperature: ")+String(temperature)+String("\tHumidity: ")+String(humidity);;
       client.publish("iot/2/message", payload.c_str());
   }
 
