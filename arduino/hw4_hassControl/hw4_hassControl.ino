@@ -246,6 +246,10 @@ void DisplayTH(float t,float h){
 
   if (isnan(h) || isnan(t)) {
     Serial.println("Failed to read from DHT sensor!");
+      display.clearDisplay();
+    display.setTextSize(1);
+    display.setCursor(0,0);
+    display.print("Temperature: ");
     return;
   }
 
