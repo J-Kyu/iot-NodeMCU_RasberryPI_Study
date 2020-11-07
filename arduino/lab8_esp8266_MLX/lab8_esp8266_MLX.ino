@@ -36,7 +36,7 @@ void setup() {
   
   Wire.setClock(100000L);
   
-  dbegin(9600);
+  Serial.begin(9600);
    //OLED
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println(F("SSD1306 allocation failed ~!"));
@@ -158,7 +158,6 @@ void DisplayOLED(char* text,float temp ,float percent){
   //loading section
   if( percent > 0.0f){
 
-    drintln(128*percent);
     for( int i = 0; i < int(128*percent); i+= 10){
         display.setTextSize(3);
         display.setCursor(i,40);
