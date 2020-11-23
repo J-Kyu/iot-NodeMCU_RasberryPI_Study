@@ -1,0 +1,35 @@
+
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+homeassistant:
+        name: J-Kyu
+        latitude: 36.103296
+        longitude: 129.387009
+        elevation: 80
+        unit_system: metric
+    
+        customize: !include customize.yaml
+
+
+
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+group: !include groups.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+mqtt:
+    broker: 203.252.106.154
+    port: 1883
+    username: iot
+    password: csee1414
+    protocol: 3.1.1
+
+sensor: !include sensors.yaml
+switch: !include switch.yaml
+automation: !include automations.yaml
+

@@ -1,0 +1,19 @@
+- alias: 'USBELED on control' 
+  initial_state: True
+  trigger:
+      platform: template
+      entity_id: switch.usb_led
+      value_template: "{% if states.sensor.light_intensity.state | float < 400%} true {% endif %}"
+      action:
+        - service: switch.turn_on
+        - delay: 10
+        - service: switch.turn_off
+
+- alias: 'USBELED OFF control'
+  initial_state: False
+  trigger:
+    platform: template
+    entity_id: switch.usb_led
+    value_template: "{% if states.sensor.light_intensity.state | float > 600 %} true {% endif %}"
+    action:
+      - service: switch.turn_off

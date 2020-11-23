@@ -1,0 +1,15 @@
+iot2_dht22:
+    name: DHT22
+    entities:
+        - sensor.temp_humidity
+        - sensor.humidity
+        - sensor.temperature
+iot2_cds:
+    name: CDS
+    entities:
+        - sensor.light_intensity
+iot2_control:
+    name: Control
+    entities:
+        - switch.usbe_led
+        - switch.led

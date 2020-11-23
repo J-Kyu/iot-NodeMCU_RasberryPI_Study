@@ -1,0 +1,13 @@
+- platform: mqtt
+  name: "USB_LED"
+  state_topic: "iot/2"
+  command_topic: "iot/2"
+  payload_on: "USBLED/ON"
+  payload_off: "USBLED/OFF"
+
+- platform: mqtt
+  name: "led"
+  state_topic: "iot/2"
+  command_topic: "iot/2"
+  payload_on: "LED/ON"
+  payload_off: "LED/OFF"

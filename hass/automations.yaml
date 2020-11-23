@@ -1,0 +1,26 @@
+- alias: 'USBELED on control' 
+  initial_state: False
+  trigger:
+    - platform: template
+      value_template: "{{ (states.sensor.light_intensity.state|float) < 400.0 }}" 
+  action:
+     - service: switch.turn_on
+       entity_id: switch.usb_led
+     - delay: '00:00:10'
+     - service: switch.turn_off
+       entity_id: switch.usb_led
+- alias: 'USBELED OFF control'
+  initial_state: False
+  trigger:
+    - platform: template
+      value_template: "{% if states.sensor.light_intensity.state | float > 600   %} true  {% endif  %}"
+  action:
+    service: switch.turn_off
+    entity_id: switch.usb_led
+    #- alias: 'Get Temperature & Humidity & Light Intensity'
+    #  action:
+    #    - delay: 10
+    #    - service: mqtt.publish
+    #    - topic: 'iot/2'
+    #    - payload: 'cds
+
