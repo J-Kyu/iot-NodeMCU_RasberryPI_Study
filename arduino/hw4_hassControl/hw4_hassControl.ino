@@ -218,39 +218,25 @@ void loop() {
       float temperature = dht.getTemperature();
       DisplayTH(temperature,humidity);
 
+
+
       //publishing temperature & Humidiy & Light Intensity
-      String payload = String("Light intensity: ") + String(light_val)+String("\t Temperature: ")+String(temperature)+String("\tHumidity: ")+String(humidity);;
-      client.publish("iot/2/message", payload.c_str());
+//      String payload = String("Light intensity: ") + String(lightValue)+String("\t Temperature: ")+String(temperature)+String("\tHumidity: ")+String(humidity);
+      
+      String payload = String(light_val);
+      client.publish("iot/2/cds", payload.c_str());
+      payload = String(temperature);
+      client.publish("iot/2/dht22_t", payload.c_str());
+      payload = String(humidity);
+      client.publish("iot/2/dht22_h", payload.c_str());
+      payload = String("Temperature: ")+String(temperature)+String("\tHumidity: ")+String(humidity);
+      client.publish("iot/2/dht22", payload.c_str());
+
+      
+      
   }
 
-  if( controlFlag == 1 || preEnvState == 1 && light_val < 300 && currentTime - relayOnTime > 10000){
-    //turn on
-    relayState = RELAY_ON;
-    relayOnTime = millis();
-    controlFlag = 0;
-  }
-  else if( controlFlag == 0 && currentTime - relayOnTime < 10000){
-    relayState = RELAY_ON;
-  }
-  else if(controlFlag == 2 || relayState == RELAY_ON && currentTime - relayOnTime > 10000){
-    relayState = RELAY_OFF;
-    relayOnTime = currentTime - 10001; // always make this valid:  currentTime - relayOnTime > 10000
-    controlFlag = 0;
-  }
 
-  digitalWrite(RELAY1_PIN, relayState); // 릴레이 상태값 출력하기
-  
-
-  
-
-   
-  if(light_val < 300){
-       preEnvState = 0;
-  }
-  else{
-      preEnvState = 1;
-  }
-  
 } /* end of loop() */
 
 
@@ -260,6 +246,10 @@ void DisplayTH(float t,float h){
 
   if (isnan(h) || isnan(t)) {
     Serial.println("Failed to read from DHT sensor!");
+      display.clearDisplay();
+    display.setTextSize(1);
+    display.setCursor(0,0);
+    display.print("Temperature: ");
     return;
   }
 
