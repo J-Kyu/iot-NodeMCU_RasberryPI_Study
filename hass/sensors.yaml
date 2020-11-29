@@ -10,16 +10,8 @@
     - platform: mqtt
       state_topic: "iot/2/cds"
       name: light_intensity
-
-#    - platform: mqtt   
-#      state_topic: "iot/nth405/dht22"
-#      name: temp_humidity
-#    - platform: mqtt
-#      state_topic: "iot/nth405/dht22_t"
-#      name: temperature
-#    - platform: mqtt
-#      state_topic: "iot/nth405/dht22_h"
-#      name: humidity
-#    - platform: mqtt
-#      state_topic: "iot/nth405/cds"
-#      name: light_intensity
+    - platform: mqtt
+      state_topic: 'monitor/21500629_monitor/kyuiphone'
+      value_template: '{{ value_json.confidence  }}'
+      unit_of_measurement: '%'
+      name: kyu_iPhone
