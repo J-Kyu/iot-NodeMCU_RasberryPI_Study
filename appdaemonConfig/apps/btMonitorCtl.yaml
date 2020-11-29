@@ -1,0 +1,5 @@
+btMonitorCtl:
+        module: btMonitorCtl
+        class: BtMonitorCtl
+        btSensoriPhone:  sensor.kyu_iphone
+        stRasbianDisplay: switch.rasbian_display
