@@ -152,7 +152,7 @@ void callback(const String& payload) {
       }
       else if(msgString == "USBLED"){
           digitalWrite(RELAY1_PIN, !relayState);
-          controlFlag = relayState == 1 ? 1 : 2;
+          controlFlag = relayState == true ? 1 : 2;
       }
   
 } 
@@ -210,7 +210,7 @@ void loop() {
   light_val = analogRead(CDS_PIN); 
 
   
-  if(currentTime-previousHTTime >= 10000){
+  if(currentTime-previousHTTime >= 5000){
       
       previousHTTime = millis();
       //display
@@ -221,7 +221,7 @@ void loop() {
 
 
       //publishing temperature & Humidiy & Light Intensity
-//      String payload = String("Light intensity: ") + String(lightValue)+String("\t Temperature: ")+String(temperature)+String("\tHumidity: ")+String(humidity);
+      //String payload = String("Light intensity: ") + String(lightValue)+String("\t Temperature: ")+String(temperature)+String("\tHumidity: ")+String(humidity);
       
       String payload = String(light_val);
       client.publish("iot/2/cds", payload.c_str());
@@ -246,10 +246,12 @@ void DisplayTH(float t,float h){
 
   if (isnan(h) || isnan(t)) {
     Serial.println("Failed to read from DHT sensor!");
-      display.clearDisplay();
+    display.clearDisplay();
     display.setTextSize(1);
     display.setCursor(0,0);
-    display.print("Temperature: ");
+    display.print("Failed to read DHT Sensor! ");
+    display.display(); 
+
     return;
   }
 
