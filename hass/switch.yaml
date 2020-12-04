@@ -1,0 +1,21 @@
+- platform: mqtt
+  name: "USB_LED"
+  state_topic: "iot/2"
+  command_topic: "iot/2"
+  payload_on: "USBLED/ON"
+  payload_off: "USBLED/OFF"
+
+- platform: mqtt
+  name: "led"
+  state_topic: "iot/2"
+  command_topic: "iot/2"
+  payload_on: "LED/ON"
+  payload_off: "LED/OFF"
+
+- platform: command_line
+  switches:
+          rasbian_display:
+                  friendly_name: "Rasberry Display"
+                  command_on:  sshpass -p password ssh pi@127.0.0.1 'export DISPLAY=:0 && xset dpms force on'
+                  command_off:  sshpass -p password ssh pi@127.0.0.1 'export DISPLAY=:0 && xset dpms force off'
+                  command_state:  sshpass -p password ssh pi@127.0.0.1 'export DISPLAY=:0 && xset -q | grep Monitor is | cut -c14-17' | grep On > /dev/null

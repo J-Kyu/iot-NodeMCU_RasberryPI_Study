@@ -1,0 +1,4 @@
+            "sensor.light_intensity":
+                icon: mdi:lightbulb
+            "sensor.temperature":
+                icon: mdi:oil-temperature

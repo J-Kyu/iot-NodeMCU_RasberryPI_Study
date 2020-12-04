@@ -1,0 +1,62 @@
+led:
+  widget_type: switch
+  title: LED
+  entity: switch.led
+  icon_on: mdi-led-on
+  icon_off: mdi-led-off
+
+usb_led:
+  widget_type: switch
+  title: USB LED
+  entity: switch.usb_led
+  icon_on: mdi-alarm-light
+  icon_off: mdi-alarm-light-outline
+
+rasbian_display:
+  widget_type: switch
+  title: Rasbian Display
+  entity: switch.rasbian_display
+  icon_on: mdi-monitor
+  icon_off: mdi-monitor
+
+
+
+light_intensity:
+  widget_type: sensor
+  title: Light Intensity
+  precision: 0
+  entity: sensor.light_intensity
+
+temperature:
+  widget_type: sensor
+  title: Temperature
+  units: "&deg;C"
+  precision: 1
+  entity: sensor.temperature
+
+humidity:
+  widget_type: sensor
+  title: Humidity
+  units: "%"
+  precision: 1
+  entity: sensor.humidity
+
+btiPhone:
+  widget_type: sensor
+  title: Kyu iPhone Confidence
+  units: "%"
+  precision: 0
+  entity: sensor.kyu_iphonebtiPhone:
+  widget_type: sensor
+  title: Kyu iPhone Confidence
+  units: "%"
+  precision: 0
+  entity: sensor.kyu_iphone
+
+rasbian_display:
+  widget_type: switch
+  title: Rasbian Display
+  entity: switch.rasbian_display
+  icon_on: mdi-monitor
+  icon_off: mdi-monitor
+
