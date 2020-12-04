@@ -1,21 +1,3 @@
-title: Main
-widget_dimensions: [1, 1]
-widget_size: [120,120]
-widget_margins: [0,0]
-columns: 1024
-
-clock:
-  widget_type: clock
-
-
-weather:
-  widget_type: weather
-  units: "&deg;F"
-  show_forecast: 1
-
-reload:
-  widget_type: reload
-
 led:
   widget_type: switch
   title: LED
@@ -29,6 +11,15 @@ usb_led:
   entity: switch.usb_led
   icon_on: mdi-alarm-light
   icon_off: mdi-alarm-light-outline
+
+rasbian_display:
+  widget_type: switch
+  title: Rasbian Display
+  entity: switch.rasbian_display
+  icon_on: mdi-monitor
+  icon_off: mdi-monitor
+
+
 
 light_intensity:
   widget_type: sensor
@@ -55,6 +46,11 @@ btiPhone:
   title: Kyu iPhone Confidence
   units: "%"
   precision: 0
+  entity: sensor.kyu_iphonebtiPhone:
+  widget_type: sensor
+  title: Kyu iPhone Confidence
+  units: "%"
+  precision: 0
   entity: sensor.kyu_iphone
 
 rasbian_display:
@@ -64,13 +60,3 @@ rasbian_display:
   icon_on: mdi-monitor
   icon_off: mdi-monitor
 
-
-layout:
-  - include: top_panel
-  - include: main_middle_panel
-  - include: bottom_panel
-# - clock(4x2)
-# - led, usb_led, rasbian_display
-# - light_intensity, temperature, humidity
-# - btiPhone
-# - reload(1x1)

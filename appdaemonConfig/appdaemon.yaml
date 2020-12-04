@@ -6,14 +6,8 @@ appdaemon:
   plugins:
     HASS:
         type: hass
-        ha_url: http://192.168.137.110:8123
-        token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiI3OWZhZThkOGFmY2Q0YjZiYjQ0NzE3M2YzZWUyMzU5ZSIsImlhdCI6MTYwNjAxNzM0OSwiZXhwIjoxOTIxMzc3MzQ5fQ.4rcPn4brC0APGfZhmJyaPNaSAltErRHXVX1anUuJzL0  
-   # MQTT:
-    #   type: mqtt
-    #   namespace: mqtt
-    #   client_host: 203.252.106.154
-    #   client_user: iot
-      # client_password: csee1414
+        ha_url:
+        token: 
 http:
   url: http://192.168.137.110:5050
 admin:
